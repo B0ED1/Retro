@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TapeFlow — Retro Cassette & Soundscape Deck</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col items-center justify-center p-4 selection:bg-amber-500 selection:text-black font-mono-tech relative">
+  <div class="scanlines fixed inset-0"></div>
+
+  <main class="w-full max-w-2xl bg-zinc-900 border-4 border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black relative z-10">
+
+    <header class="flex flex-wrap justify-between items-center border-b border-zinc-800 pb-4 mb-6 gap-3">
+      <div class="flex items-center gap-3">
+        <span id="powerLed" class="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_10px_#f59e0b]"></span>
+        <div>
+          <h1 class="font-retro text-3xl sm:text-4xl tracking-widest text-amber-400 leading-none">TAPE-FLOW // DECK-90</h1>
+          <p class="text-[10px] text-zinc-400 tracking-wider">STEREO CASSETTE PLAYER</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="bg-zinc-950 px-3 py-1 rounded border border-zinc-800 flex items-center gap-2">
+          <span class="text-[10px] text-zinc-500">TAPE</span>
+          <span id="tapeCounter" class="font-retro text-2xl text-amber-400 tracking-widest">000</span>
+        </div>
+        <div id="deckStatus" class="font-retro text-xl text-zinc-500 uppercase tracking-wider bg-zinc-950 px-3 py-1 rounded border border-zinc-800">NO TAPE</div>
+      </div>
+    </header>
+
+    <!-- Satu kaset saja -->
+    <section class="cassette-perspective bg-zinc-950 rounded-2xl p-5 border-2 border-zinc-800 shadow-inner mb-4 relative">
+      <div id="cassetteBody" class="w-full bg-zinc-800 border-2 border-zinc-600 rounded-xl p-4 relative shadow-xl transition-all duration-500">
+        <div class="absolute top-2 left-2 text-zinc-500 text-xs select-none">✕</div>
+        <div class="absolute top-2 right-2 text-zinc-500 text-xs select-none">✕</div>
+        <div class="absolute bottom-2 left-2 text-zinc-500 text-xs select-none">✕</div>
+        <div class="absolute bottom-2 right-2 text-zinc-500 text-xs select-none">✕</div>
+
+        <div id="tapeSticker" class="bg-zinc-100 text-zinc-900 rounded-lg p-3 border border-amber-300 shadow transition-colors">
+          <div class="flex justify-between items-center text-xs font-bold uppercase tracking-wider border-b border-amber-400/60 pb-1 mb-2 gap-2">
+            <span id="tapeSide" class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] tracking-wide">SIDE A</span>
+            <span id="tapeTitle" class="font-retro text-lg text-center font-bold truncate flex-1">BLANK TAPE</span>
+            <span id="tapeSourceType" class="text-[10px] text-zinc-600 truncate max-w-[30%]">-</span>
+          </div>
+
+          <div id="dropZone" class="bg-zinc-900 border-2 border-zinc-700 rounded-md p-3 flex justify-around items-center h-28 relative overflow-hidden cursor-pointer" title="Klik untuk membuka rak kaset">
+            <div class="relative flex items-center justify-center">
+              <div id="leftTapeRoll" class="absolute rounded-full bg-amber-950/80 transition-all duration-300 w-20 h-20"></div>
+              <div id="leftReel" class="w-14 h-14 rounded-full border-4 border-dashed border-zinc-300 flex items-center justify-center bg-zinc-950 relative z-10 shadow-inner">
+                <div class="w-5 h-5 rounded-full bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center"><div class="w-2 h-2 rounded-full bg-amber-400"></div></div>
+              </div>
+            </div>
+            <div class="flex flex-col items-center justify-center gap-1 z-10">
+              <div class="w-20 h-5 bg-zinc-950 border border-zinc-700 rounded flex items-center justify-center px-1">
+                <span id="presetBadge" class="text-[10px] text-amber-400 font-retro tracking-wider truncate">NO TAPE</span>
+              </div>
+              <div class="w-24 h-1 bg-amber-900/60 rounded"></div>
+            </div>
+            <div class="relative flex items-center justify-center">
+              <div id="rightTapeRoll" class="absolute rounded-full bg-amber-950/80 transition-all duration-300 w-14 h-14"></div>
+              <div id="rightReel" class="w-14 h-14 rounded-full border-4 border-dashed border-zinc-300 flex items-center justify-center bg-zinc-950 relative z-10 shadow-inner">
+                <div class="w-5 h-5 rounded-full bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center"><div class="w-2 h-2 rounded-full bg-amber-400"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Display: penyanyi - judul (running text kalau panjang) -->
+    <section class="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2 mb-4 flex items-center gap-3">
+      <span id="lcdIcon" class="text-amber-400 font-retro text-xl">♪</span>
+      <div id="lcdWin" class="lcd-win flex-1 font-retro text-2xl text-amber-400 tracking-widest">
+        <div id="lcdTrack" class="lcd-track"><span>NO MUSIC PLAYED</span></div>
+      </div>
+    </section>
+
+    <!-- Live lyrics -->
+    <section class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 mb-4">
+      <div class="flex justify-between items-center text-[10px] text-zinc-500 tracking-wider uppercase mb-2">
+        <span>Live lyrics</span>
+        <button id="btnLrc" class="text-sky-400 hover:text-sky-300 uppercase" title="Pakai file lirik .lrc sendiri">Load .lrc</button>
+      </div>
+      <div id="lyricsBox" class="ly-box relative h-36 overflow-hidden" aria-live="off"><div id="lyTrack" class="ly-track"></div></div>
+      <input id="lrcInput" type="file" accept=".lrc,.txt" class="hidden">
+    </section>
+
+    <section class="grid grid-cols-2 gap-3 mb-6 bg-zinc-950 p-3 rounded-xl border border-zinc-800">
+      <div class="flex flex-col items-center relative">
+        <canvas id="vuLeft" width="220" height="75" class="w-full bg-amber-950/20 rounded border border-amber-900/40"></canvas>
+        <div class="flex justify-between w-full px-2 mt-1"><span class="text-[9px] text-zinc-500">CHANNEL L</span><span id="peakLedL" class="w-2 h-2 rounded-full bg-zinc-700"></span></div>
+      </div>
+      <div class="flex flex-col items-center relative">
+        <canvas id="vuRight" width="220" height="75" class="w-full bg-amber-950/20 rounded border border-amber-900/40"></canvas>
+        <div class="flex justify-between w-full px-2 mt-1"><span class="text-[9px] text-zinc-500">CHANNEL R</span><span id="peakLedR" class="w-2 h-2 rounded-full bg-zinc-700"></span></div>
+      </div>
+    </section>
+
+    <section class="bg-zinc-950/80 p-4 rounded-xl border border-zinc-800 mb-6">
+      <div class="text-[10px] text-zinc-400 tracking-wider uppercase mb-3">Analog Mixer & Tone Controls</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+        <div><div class="flex justify-between text-zinc-400 mb-1"><span>TRACK</span><span id="valSynth" class="text-amber-400">70%</span></div>
+          <input id="sliderSynth" type="range" min="0" max="1" step="0.01" value="0.7" class="retro-slider w-full"></div>
+        <div><div class="flex justify-between text-zinc-400 mb-1"><span>RAIN FX</span><span id="valRain" class="text-amber-400">40%</span></div>
+          <input id="sliderRain" type="range" min="0" max="1" step="0.01" value="0.4" class="retro-slider w-full"></div>
+        <div><div class="flex justify-between text-zinc-400 mb-1"><span>TAPE HISS</span><span id="valHiss" class="text-amber-400">30%</span></div>
+          <input id="sliderHiss" type="range" min="0" max="1" step="0.01" value="0.3" class="retro-slider w-full"></div>
+        <div><div class="flex justify-between text-zinc-400 mb-1"><span>WARMTH</span><span id="valWarmth" class="text-amber-400">2.4k</span></div>
+          <input id="sliderWarmth" type="range" min="400" max="8000" step="50" value="2400" class="retro-slider w-full"></div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <button id="btnRewind" class="deck-btn text-zinc-300 hover:text-amber-400" title="Rewind (R)"><span>⏪ REW</span></button>
+      <button id="btnFF" class="deck-btn text-zinc-300 hover:text-amber-400" title="Fast Forward (F)"><span>⏩ FF</span></button>
+      <button id="btnPlay" class="deck-btn text-emerald-400 font-bold" title="Play (Space)"><span>▶ PLAY</span></button>
+      <button id="btnStop" class="deck-btn text-red-400" title="Stop (S)"><span>■ STOP</span></button>
+      <button id="btnShelf" class="deck-btn text-sky-400" title="Rak kaset (L)"><span>🗄 RAK</span></button>
+      <button id="btnEject" class="deck-btn text-zinc-400" title="Eject (E)"><span>⏏ EJECT</span></button>
+    </section>
+
+    <div class="mt-4 pt-3 border-t border-zinc-800/80 flex flex-wrap justify-between gap-1 text-[10px] text-zinc-500">
+      <span>[Space] Play/Stop • [E] Eject • [L] Rak • [ ] ] geser lirik</span>
+      <span>TapeFlow v2.0</span>
+    </div>
+  </main>
+
+  <!-- Rak kaset -->
+  <dialog id="shelf" class="shelf bg-zinc-900 text-zinc-100 border-2 border-zinc-700 rounded-2xl p-5 w-[min(42rem,92vw)] font-mono-tech">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-retro text-2xl text-amber-400 tracking-widest">RAK KASET</h2>
+      <button id="shelfClose" class="deck-btn text-zinc-400 !py-1 !px-3" aria-label="Tutup rak">✕</button>
+    </div>
+    <div id="shelfGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-5"></div>
+
+    <div class="border-t border-zinc-800 pt-4">
+      <h3 class="text-xs text-zinc-400 mb-2">Tambah kaset baru (file lokal atau link)</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+        <input id="fArtist" placeholder="Penyanyi" class="bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-amber-500">
+        <input id="fTitle" placeholder="Judul lagu" class="bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-amber-500">
+      </div>
+      <div class="flex gap-2 mb-2">
+        <input id="fUrl" placeholder="https://.../lagu.mp3" class="flex-1 min-w-0 bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-amber-500">
+        <button id="fPick" class="deck-btn text-sky-400 !py-1 !px-3 !text-base">📁 FILE</button>
+      </div>
+      <input id="fFile" type="file" accept="audio/*" class="hidden">
+      <div class="flex items-center justify-between gap-2">
+        <span id="shelfMsg" class="text-xs text-zinc-400 flex-1"></span>
+        <button id="fAdd" class="deck-btn text-emerald-400 !py-1 !px-3 !text-base">MASUKKAN KASET</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/audio.js"></script>
+  <script src="js/visual.js"></script>
+  <script src="js/lyrics.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

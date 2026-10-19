@@ -1,0 +1,191 @@
+/* Custom Fonts */
+.font-retro { 
+  font-family: 'VT323', monospace; 
+}
+.font-mono-tech { 
+  font-family: 'Share Tech Mono', monospace; 
+}
+
+/* CRT Screen Scanlines */
+.scanlines {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Reel Rotations */
+@keyframes spinClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinCounterClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.spinning-normal {
+  animation: spinClockwise 2.5s linear infinite;
+}
+
+.spinning-fast {
+  animation: spinClockwise 0.5s linear infinite;
+}
+
+.spinning-reverse {
+  animation: spinCounterClockwise 0.5s linear infinite;
+}
+
+/* Mechanical Push Buttons */
+.deck-btn {
+  background-color: #27272a;
+  border-bottom: 4px solid #09090b;
+  border-top: 1px solid #3f3f46;
+  border-left: 1px solid #3f3f46;
+  border-right: 1px solid #18181b;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0.5rem;
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+  user-select: none;
+}
+
+.deck-btn:hover {
+  background-color: #3f3f46;
+}
+
+.deck-btn:active, .deck-btn.btn-active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  background-color: #18181b;
+}
+
+/* Retro Sliders */
+.retro-slider {
+  appearance: none;
+  background: #09090b;
+  height: 6px;
+  border-radius: 3px;
+  border: 1px solid #27272a;
+  outline: none;
+  accent-color: #f59e0b;
+}
+
+.retro-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 20px;
+  background: #d4d4d8;
+  border: 1px solid #18181b;
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 #ffffff, 0 2px 4px rgba(0,0,0,0.6);
+}
+
+/* Peak LED indicator */
+.led-active {
+  background-color: #ef4444 !important;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+/* 3D Cassette Eject & Insert Animations */
+.cassette-perspective {
+  perspective: 1000px;
+}
+
+.cassette-ejected {
+  transform: translateY(-38px) rotateX(22deg) scale(0.93) !important;
+  box-shadow: 0 25px 35px -5px rgba(0, 0, 0, 0.9), 0 0 20px rgba(245, 158, 11, 0.25) !important;
+  filter: brightness(1.08);
+}
+
+.cassette-slide-out {
+  animation: tapeSlideOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.cassette-slide-in {
+  animation: tapeSlideIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25) forwards;
+}
+
+@keyframes tapeSlideOut {
+  0% {
+    transform: translateY(-38px) rotateX(22deg) scale(0.93);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-95px) rotateX(35deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes tapeSlideIn {
+  0% {
+    transform: translateY(-90px) rotateX(35deg) scale(0.8);
+    opacity: 0;
+  }
+  65% {
+    transform: translateY(-10px) rotateX(8deg) scale(0.98);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) rotateX(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Cassette Tape Shelf / Rack Card */
+.rack-tape {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rack-tape:hover {
+  transform: translateY(-4px) scale(1.02);
+  filter: brightness(1.15);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.7), 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.rack-tape.active-in-deck {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.15);
+}
+
+.rack-tape-pulse {
+  animation: rackPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes rackPulse {
+  0%, 100% { border-color: rgba(245, 158, 11, 0.4); }
+  50% { border-color: rgba(245, 158, 11, 1); box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+}
+
+/* ---- v2: LCD marquee, lyrics, shelf ---- */
+dialog.shelf { margin: auto; }
+dialog.shelf::backdrop { background: rgba(0, 0, 0, 0.78); }
+
+.lcd-win { overflow: hidden; white-space: nowrap; }
+.lcd-track { display: flex; width: max-content; }
+.lcd-track span { padding-right: 3rem; }
+.lcd-track.marquee { animation: lcdScroll var(--dur, 12s) linear infinite; }
+@keyframes lcdScroll { to { transform: translateX(-50%); } }
+
+.ly-box { -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); }
+.ly-track { transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1); will-change: transform; }
+.ly {
+  height: 32px; line-height: 32px; padding: 0 0.5rem; text-align: center;
+  font-family: 'VT323', monospace; font-size: 1.25rem; color: #3f3f46;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.45s ease, transform 0.45s ease;
+}
+.ly.near { color: #71717a; }
+.ly.cur { color: #fbbf24; transform: scale(1.15); text-shadow: 0 0 10px rgba(245, 158, 11, 0.55); }
+.ly.msg { color: #a1a1aa; }
