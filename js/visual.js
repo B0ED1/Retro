@@ -121,7 +121,11 @@ class TapeVisualizer {
   startRenderLoop() {
     const render = () => {
       requestAnimationFrame(render);
-      if (!this.audio.analyser || !this.audio.isPlaying) {
+      if (this.audio.fakeVU) {
+        const t = 0.3 + Math.random() * 0.4;
+        this.needleValL += (t - this.needleValL) * 0.25;
+        this.needleValR += (t * 0.95 - this.needleValR) * 0.25;
+      } else if (!this.audio.analyser || !this.audio.isPlaying) {
         this.needleValL *= 0.8;
         this.needleValR *= 0.8;
       } else {

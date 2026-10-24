@@ -202,7 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('ERROR', 'stop');
       });
     } else {
-      loading = audio.setPreset(i);
+      loading = (async () => {
+        if (p.blob && !p.buffer) p.buffer = await audio.decode(await p.blob.arrayBuffer());
+        return audio.setPreset(i);
+      })().catch((err) => {
+        console.error(err);
+        lyricsMsg('GAGAL MEMBUKA FILE KASET');
+        setStatus('ERROR', 'stop');
+      });
     }
     loadLyricsFor(p);
     renderShelf();
@@ -212,6 +219,60 @@ document.addEventListener('DOMContentLoaded', () => {
     await loading;
     busy = false;
     if (!p.type) handlePlay();
+  }
+
+  // ---------- Penyimpanan kaset buatan sendiri (IndexedDB) ----------
+  const dbp = new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no idb'));
+    const r = indexedDB.open('tapeflow', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('tapes', { keyPath: 'id', autoIncrement: true });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  dbp.catch(() => {});
+
+  async function tx(mode, fn) {
+    const db = await dbp;
+    return new Promise((res, rej) => {
+      const t = db.transaction('tapes', mode);
+      const req = fn(t.objectStore('tapes'));
+      t.oncomplete = () => res(req.result);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    });
+  }
+
+  async function saveTape(p) {
+    const rec = {};
+    ['artist', 'track', 'genre', 'side', 'labelColor', 'shellBorder', 'type', 'vid', 'uri', 'autoMeta', 'lrc', 'blob']
+      .forEach((k) => { if (p[k] !== undefined && p[k] !== null && p[k] !== false) rec[k] = p[k]; });
+    if (p.id !== undefined) rec.id = p.id;
+    try {
+      p.id = await tx('readwrite', (s) => s.put(rec));
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }
+
+  async function loadSaved() {
+    try {
+      const rows = await tx('readonly', (s) => s.getAll());
+      rows.forEach((r) => audio.presets.push(r));
+    } catch (err) { /* IndexedDB tidak tersedia: lanjut tanpa penyimpanan */ }
+  }
+
+  async function removeTape(i) {
+    const p = audio.presets[i];
+    if (i === tapeIdx) { el.shelfMsg.textContent = 'Keluarkan kaset ini dulu (EJECT) sebelum menghapus.'; return; }
+    if (!confirm(`Hapus kaset "${p.track}" dari rak?`)) return;
+    try { await tx('readwrite', (s) => s.delete(p.id)); } catch (err) { console.error(err); }
+    audio.presets.splice(i, 1);
+    if (tapeIdx > i) tapeIdx--;
+    audio.currentPresetIndex = Math.max(tapeIdx, 0);
+    renderShelf();
   }
 
   // ---------- Embed: YouTube & Spotify ----------
@@ -250,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     p.artist = g.artist || (data.author || '').replace(/ - Topic$/, '') || 'Unknown';
     p.track = Lyrics.clean(g.track) || data.title;
     p.autoMeta = false;
+    if (p.id !== undefined) saveTape(p);
     if (audio.presets[tapeIdx] === p) { applyTape(p); setLCD(lcdText(p)); loadLyricsFor(p); }
     renderShelf();
   }
@@ -335,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {}
     }
     audio.presets.push(p);
+    await saveTape(p);
     el.fArtist.value = el.fTitle.value = el.fUrl.value = '';
     selectTape(audio.presets.length - 1);
   }
@@ -374,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const [labelColor, shellBorder] = PALETTE[n % PALETTE.length];
       return { artist: g.artist || 'Unknown', track: g.track, genre: 'LOCAL', side: n % 2 ? 'SIDE B' : 'SIDE A', labelColor, shellBorder, audioUrl: url };
     });
-    const customs = old.filter((p) => (p.buffer || p.type) && !scanned.includes(p));
+    const customs = old.filter((p) => (p.buffer || p.type || p.id !== undefined) && !scanned.includes(p));
     const list = [...scanned, ...customs];
     if (cur && !list.includes(cur)) list.push(cur);
     audio.presets = list;
@@ -394,23 +457,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderShelf() {
     el.grid.replaceChildren(...audio.presets.map((p, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'relative';
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'rack-tape bg-zinc-950 border-2 rounded-lg p-2 text-left flex flex-col gap-1 ' +
+      b.className = 'rack-tape w-full bg-zinc-950 border-2 rounded-lg p-2 text-left flex flex-col gap-1 ' +
         (i === tapeIdx ? 'active-in-deck border-amber-500' : 'border-zinc-700');
       const label = document.createElement('div');
       label.className = 'text-zinc-900 px-1 py-0.5 rounded text-xs font-bold font-retro truncate text-center';
       label.style.backgroundColor = p.labelColor;
-      label.textContent = p.artist.toUpperCase();
+      label.textContent = (p.artist || 'Unknown').toUpperCase();
       const name = document.createElement('div');
       name.className = 'text-[11px] text-zinc-300 truncate';
       name.textContent = p.track;
       const st = document.createElement('div');
       st.className = 'text-[9px] font-retro tracking-wider ' + (i === tapeIdx ? 'text-emerald-400' : 'text-zinc-500');
-      st.textContent = i === tapeIdx ? 'IN DECK' : ((p.buffer || p.type) ? 'CUSTOM' : 'READY');
+      st.textContent = i === tapeIdx ? 'IN DECK' : ((p.buffer || p.type || p.id !== undefined) ? 'TERSIMPAN' : 'READY');
       b.append(label, name, st);
       b.addEventListener('click', () => selectTape(i));
-      return b;
+      wrap.append(b);
+      if (p.id !== undefined) {
+        const d = document.createElement('button');
+        d.type = 'button';
+        d.setAttribute('aria-label', `Hapus kaset ${p.track}`);
+        d.className = 'absolute top-0.5 right-0.5 w-5 h-5 rounded bg-zinc-900/90 text-zinc-400 hover:text-red-400 text-[10px] leading-none';
+        d.textContent = '✕';
+        d.addEventListener('click', () => removeTape(i));
+        wrap.append(d);
+      }
+      return wrap;
     }));
   }
 
@@ -434,16 +509,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     el.shelfMsg.textContent = 'Membaca audio...';
-    let buffer, fallbackName;
+    let buffer, blob, fallbackName;
     try {
       if (pendingFile) {
         fallbackName = pendingFile.name;
+        blob = pendingFile;
         buffer = await audio.decode(await pendingFile.arrayBuffer());
       } else {
         fallbackName = url.split('?')[0].split('/').pop() || 'Unknown';
         const res = await fetch(url);
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        buffer = await audio.decode(await res.arrayBuffer());
+        const ab = await res.arrayBuffer();
+        blob = new Blob([ab]);
+        buffer = await audio.decode(ab);
       }
     } catch (err) {
       console.error(err);
@@ -452,11 +530,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const g = guessMeta(fallbackName);
     const [labelColor, shellBorder] = PALETTE[audio.presets.length % PALETTE.length];
-    audio.presets.push({
+    const np = {
       artist: el.fArtist.value.trim() || g.artist || 'Unknown',
       track: el.fTitle.value.trim() || g.track || 'Untitled',
-      genre: pendingFile ? 'LOCAL FILE' : 'FROM LINK', side: 'SIDE A', labelColor, shellBorder, buffer
-    });
+      genre: pendingFile ? 'LOCAL FILE' : 'FROM LINK', side: 'SIDE A', labelColor, shellBorder, buffer, blob
+    };
+    audio.presets.push(np);
+    if (!(await saveTape(np))) alert('Penyimpanan browser tidak tersedia/penuh: kaset ini hanya bertahan sampai halaman ditutup.');
     pendingFile = null;
     el.fArtist.value = el.fTitle.value = el.fUrl.value = '';
     selectTape(audio.presets.length - 1);
@@ -499,6 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const parsed = Lyrics.parse(await f.text());
     if (!parsed.length) { lyricsMsg('FILE LRC TIDAK VALID'); return; }
     audio.presets[tapeIdx].lrc = await f.text();
+    if (audio.presets[tapeIdx].id !== undefined) saveTape(audio.presets[tapeIdx]);
     lyrToken++; lyrOffset = 0; setLyrics(parsed);
   });
 
@@ -527,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------- Initial state: kaset kosong keluar dari deck, "NO MUSIC PLAYED" ----------
-  scanSongs();
+  loadSaved().then(scanSongs);
   showBlank();
   setLCD('NO MUSIC PLAYED');
   lyricsMsg('');

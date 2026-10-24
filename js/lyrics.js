@@ -16,7 +16,7 @@ const Lyrics = {
   clean: (s) => String(s).replace(/\(.*?\)|\[.*?\]/g, '').replace(/\s+/g, ' ').trim(),
 
   async find(artist, track) {
-    const a = this.clean(artist), t = this.clean(track), key = 'tapeflow-lrc:' + a + '|' + t;
+    const a = artist === 'Unknown' ? '' : this.clean(artist), t = this.clean(track), key = 'tapeflow-lrc:' + a + '|' + t;
     try { const c = localStorage.getItem(key); if (c) return this.parse(c); } catch (e) {}
 
     let synced = null;
@@ -24,7 +24,7 @@ const Lyrics = {
       let r = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(a)}&track_name=${encodeURIComponent(t)}`);
       if (r.ok) synced = (await r.json()).syncedLyrics;
       if (!synced) {
-        r = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(a + ' ' + t)}`);
+        r = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent((a + ' ' + t).trim())}`);
         if (r.ok) synced = ((await r.json()).find((x) => x.syncedLyrics) || {}).syncedLyrics;
       }
     } catch (e) { return null; }

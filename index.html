@@ -85,6 +85,11 @@
       </div>
     </section>
 
+    <!-- Player YouTube / Spotify (muncul hanya untuk kaset dari link) -->
+    <section id="embedBox" class="hidden bg-zinc-950 border border-zinc-800 rounded-xl p-2 mb-4">
+      <div id="embedMount" class="w-full overflow-hidden rounded"></div>
+    </section>
+
     <!-- Live lyrics -->
     <section class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 mb-4">
       <div class="flex justify-between items-center text-[10px] text-zinc-500 tracking-wider uppercase mb-2">
@@ -150,7 +155,7 @@
         <input id="fTitle" placeholder="Judul lagu" class="bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-amber-500">
       </div>
       <div class="flex gap-2 mb-2">
-        <input id="fUrl" placeholder="https://.../lagu.mp3" class="flex-1 min-w-0 bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-amber-500">
+        <input id="fUrl" placeholder="Link MP3, YouTube, atau Spotify (track)" class="flex-1 min-w-0 bg-zinc-950 border border-zinc-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-amber-500">
         <button id="fPick" class="deck-btn text-sky-400 !py-1 !px-3 !text-base">📁 FILE</button>
       </div>
       <input id="fFile" type="file" accept="audio/*" class="hidden">
